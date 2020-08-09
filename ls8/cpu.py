@@ -80,12 +80,12 @@ class CPU:
 
         return self.mdr
 
-    def ram_write(self, value, address):
+    def ram_write(self, address, value):
         """
         Should accept a value to write, and the address to write to
         """
-        self.mdr = value
         self.mar = address
+        self.mdr = value
 
         self.ram[self.mar] = self.mdr
 
@@ -127,8 +127,18 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
 
-            if command == HLT:
+            # Halt the CPU
+            if self.ir == HLT:
                 running = False
+
+            # Set the value of a register to an integer
+            if self.ir == LDI:
+                self.ram_write(operand_a, operand_b)
+
+            # Print the decimal integer value stored in the given register
+            if self.ir == PRN:
+                number = self.ram_read(operand_a)
+                print(number)
 
             # Point the PC to the next instruction in memory
             self.pc += num_operands + 1
