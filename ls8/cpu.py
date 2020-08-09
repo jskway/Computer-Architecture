@@ -32,7 +32,7 @@ class CPU:
 
         # Memory Address Register - holds the memory address we're reading or
         # writing
-        self.mar = None
+        self.mar = 0
 
         # Memory Data Register - holds the value to write or the value just read
         self.mdr = None
@@ -43,23 +43,44 @@ class CPU:
     def load(self):
         """Load a program into memory."""
 
-        address = 0
+        # Print an error if user did not provide a program to load
+        # and exit the program
+        if len(sys.argv) < 2:
+            print("Please provide a file to open\n")
+            print("Usage: filename file_to_open\n")
+            sys.exit()
 
-        # For now, we've just hardcoded a program:
+        try:
+            # Open the file provided as the 2nd arg
+            with open(sys.argv[1]) as file:
+                for line in file:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+                    # Split each line into an array, with '#' as the delimiter
+                    comment_split = line.split('#')
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+                    # The first value in each array is a possible instruction
+                    possible_instruction = comment_split[0]
+
+                    # If the value is an empty string, this line is a comment
+                    if possible_instruction == '':
+                        continue
+
+                    # If the value starts with a 1 or 0, it's an instruction
+                    if possible_instruction[0] == '1' or possible_instruction[0] == '0':
+                        # Get the first 8 values (remove trailing whitespace and
+                        # chars)
+                        instruction = possible_instruction[:8]
+
+                        # Convert the instruction into an integer and store it
+                        # in memory
+                        self.ram[self.mar] = int(instruction, 2)
+
+                        # Increment the memory address register value
+                        self.mar += 1
+
+        except FileNotFoundError:
+                print(f'{sys.argv[0]}: {sys.argv[1]} not found')
+                sys.exit()
 
 
     def alu(self, op, reg_a, reg_b):
