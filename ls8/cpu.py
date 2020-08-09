@@ -54,18 +54,17 @@ class CPU:
             # Open the file provided as the 2nd arg
             with open(sys.argv[1]) as file:
                 for line in file:
-
-                    # Split each line into an array, with '#' as the delimiter
+                    # Split the line into an array, with '#' as the delimiter
                     comment_split = line.split('#')
 
-                    # The first value in each array is a possible instruction
+                    # The first string is a possible instruction
                     possible_instruction = comment_split[0]
 
-                    # If the value is an empty string, this line is a comment
+                    # If it's an empty string, this line is a comment
                     if possible_instruction == '':
                         continue
 
-                    # If the value starts with a 1 or 0, it's an instruction
+                    # If the string starts with a 1 or 0, it's an instruction
                     if possible_instruction[0] == '1' or possible_instruction[0] == '0':
                         # Get the first 8 values (remove trailing whitespace and
                         # chars)
