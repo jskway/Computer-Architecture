@@ -10,6 +10,8 @@ ADD = 0b10100000
 SUB = 0b10100001
 MUL = 0b10100010
 DIV = 0b10100011
+PUSH = 0b01000101
+POP = 0b01000110
 
 
 class CPU:
@@ -27,6 +29,9 @@ class CPU:
         # self.reg[5] is reserved as the Interrupt Mark (IM)
         # self.reg[6] is reserved as the Interrupt Status (IS)
         # self.reg[7] is reserved as the Stack Pointer (SP)
+
+        # Initialize the SP to address 0xF4
+        self.reg[7] = 0xF4
 
         ## Internal Registers
 
@@ -52,6 +57,8 @@ class CPU:
         self.branchtable[HLT] = self.handle_hlt
         self.branchtable[LDI] = self.handle_ldi
         self.branchtable[PRN] = self.handle_prn
+        self.branchtable[PUSH] = self.handle_push
+        self.branchtable[POP] = self.handle_pop
 
     def load(self):
         """Load a program into memory."""
@@ -164,6 +171,32 @@ class CPU:
     def handle_prn(self):
         register = self.ram_read(self.pc + 1)
         print(self.reg[register])
+
+    def handle_pop(self):
+        # Get the value from address pointed to by the Stack Pointer
+        value = self.ram_read(self.reg[7])
+
+        # Get the register number to copy into
+        register = self.ram_read(self.pc + 1)
+
+        # Copy the value into the register
+        self.reg[register] = value
+
+        # Increment the Stack Pointer
+        self.reg[7] += 1
+
+    def handle_push(self):
+        # Decrement the Stack Pointer
+        self.reg[7] -= 1
+
+        # Get the register to retrieve the value from
+        register = self.ram_read(self.pc + 1)
+
+        # Get the value from the register
+        value = self.reg[register]
+
+        # Copy the value to the address pointed to by the SP
+        self.ram_write(self.reg[7], value)
 
     def run(self):
         """Run the CPU."""
