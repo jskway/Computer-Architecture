@@ -19,11 +19,14 @@ class CPU:
         """Construct a new CPU."""
 
         # Initialize ram to hold 256 bytes of memory
-        byte = [0] * 8
-        self.ram = [byte] * 256
+        self.ram = [0] * 256
 
         # Eight general purpose registers
-        self.reg = [byte] * 8
+        self.reg = [0] * 8
+
+        # self.reg[5] is reserved as the Interrupt Mark (IM)
+        # self.reg[6] is reserved as the Interrupt Status (IS)
+        # self.reg[7] is reserved as the Stack Pointer (SP)
 
         ## Internal Registers
 
@@ -52,7 +55,6 @@ class CPU:
 
     def load(self):
         """Load a program into memory."""
-
         # Print an error if user did not provide a program to load
         # and exit the program
         if len(sys.argv) < 2:
@@ -109,7 +111,10 @@ class CPU:
         """
         Should accept the address to read and return the value stored there
         """
+        # Save address to MAR
         self.mar = address
+
+        # Save data to MDR
         self.mdr = self.ram[self.mar]
 
         return self.mdr
@@ -118,9 +123,13 @@ class CPU:
         """
         Should accept a value to write, and the address to write to
         """
+        # Save address to MAR
         self.mar = address
+
+        # Save value to MDR
         self.mdr = value
 
+        # Save the value in MDR to the memory address stored in MAR
         self.ram[self.mar] = self.mdr
 
     def trace(self):
@@ -149,6 +158,7 @@ class CPU:
     def handle_ldi(self):
         register = self.ram_read(self.pc + 1)
         value = self.ram_read(self.pc + 2)
+
         self.reg[register] = value
 
     def handle_prn(self):
