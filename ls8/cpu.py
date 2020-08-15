@@ -1,29 +1,30 @@
 """CPU functionality."""
-
 import sys
-
-"""Instruction Opcodes"""
-ADD = 0b10100000
-CALL = 0b01010000
-CMP = 0b10100111
-DIV = 0b10100011
-HLT = 0b00000001
-JEQ = 0b01010101
-JMP = 0b01010100
-JNE = 0b01010110
-LDI = 0b10000010
-MUL = 0b10100010
-PRN = 0b01000111
-POP = 0b01000110
-PUSH = 0b01000101
-RET = 0b00010001
-SUB = 0b10100001
 
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
+
+        # OPCODEs
+        self.opcodes = {
+            "ADD": 0b10100000,
+            "CALL": 0b01010000,
+            "CMP": 0b10100111,
+            "DIV": 0b10100011,
+            "HLT": 0b00000001,
+            "JEQ": 0b01010101,
+            "JMP": 0b01010100,
+            "JNE": 0b01010110,
+            "LDI": 0b10000010,
+            "MUL": 0b10100010,
+            "PRN": 0b01000111,
+            "POP": 0b01000110,
+            "PUSH": 0b01000101,
+            "RET": 0b00010001,
+            "SUB": 0b10100001
+        }
 
         # Initialize ram to hold 256 bytes of memory
         self.ram = [0] * 256
@@ -68,69 +69,28 @@ class CPU:
 
         # Set up a branch table
         self.branchtable = {}
-        self.branchtable[HLT] = self.handle_hlt
-        self.branchtable[LDI] = self.handle_ldi
-        self.branchtable[PRN] = self.handle_prn
-        self.branchtable[PUSH] = self.handle_push
-        self.branchtable[POP] = self.handle_pop
-        self.branchtable[CALL] = self.handle_call
-        self.branchtable[RET] = self.handle_ret
-        self.branchtable[JMP] = self.handle_jmp
-        self.branchtable[JEQ] = self.handle_jeq
-        self.branchtable[JNE] = self.handle_jne
-
-    def load(self):
-        """Load a program into memory."""
-        # Print an error if user did not provide a program to load
-        # and exit the program
-        if len(sys.argv) < 2:
-            print("Please provide a file to open\n")
-            print("Usage: filename file_to_open\n")
-            sys.exit()
-
-        try:
-            # Open the file provided as the 2nd arg
-            with open(sys.argv[1]) as file:
-                for line in file:
-                    # Split the line into an array, with '#' as the delimiter
-                    comment_split = line.split('#')
-
-                    # The first string is a possible instruction
-                    possible_instruction = comment_split[0]
-
-                    # If it's an empty string, this line is a comment
-                    if possible_instruction == '':
-                        continue
-
-                    # If the string starts with a 1 or 0, it's an instruction
-                    if possible_instruction[0] == '1' or possible_instruction[0] == '0':
-                        # Get the first 8 values (remove trailing whitespace and
-                        # chars)
-                        instruction = possible_instruction[:8]
-
-                        # Convert the instruction into an integer and store it
-                        # in memory
-                        self.ram[self.mar] = int(instruction, 2)
-
-                        # Increment the memory address register value
-                        self.mar += 1
-
-        except FileNotFoundError:
-                print(f'{sys.argv[0]}: {sys.argv[1]} not found')
-                sys.exit()
-
+        self.branchtable[self.opcodes['HLT']] = self.handle_hlt
+        self.branchtable[self.opcodes['LDI']] = self.handle_ldi
+        self.branchtable[self.opcodes['PRN']] = self.handle_prn
+        self.branchtable[self.opcodes['PUSH']] = self.handle_push
+        self.branchtable[self.opcodes['POP']] = self.handle_pop
+        self.branchtable[self.opcodes['CALL']] = self.handle_call
+        self.branchtable[self.opcodes['RET']] = self.handle_ret
+        self.branchtable[self.opcodes['JMP']] = self.handle_jmp
+        self.branchtable[self.opcodes['JEQ']] = self.handle_jeq
+        self.branchtable[self.opcodes['JNE']] = self.handle_jne
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
-        if op == ADD:
+        if op == self.opcodes['ADD']:
             self.reg[reg_a] += self.reg[reg_b]
-        elif op == SUB:
+        elif op == self.opcodes['SUB']:
             self.reg[reg_a] -= self.reg[reg_b]
-        elif op == MUL:
+        elif op == self.opcodes['MUL']:
             self.reg[reg_a] *= self.reg[reg_b]
-        elif op == DIV:
+        elif op == self.opcodes['DIV']:
             self.reg[reg_a] /= self.reg[reg_b]
-        elif op == CMP:
+        elif op == self.opcodes['CMP']:
             # Reset the flags
             self.fl = 0b00000000
 
@@ -148,51 +108,6 @@ class CPU:
 
         else:
             raise Exception("Unsupported ALU operation")
-
-    def ram_read(self, address):
-        """
-        Should accept the address to read and return the value stored there
-        """
-        # Save address to MAR
-        self.mar = address
-
-        # Save data to MDR
-        self.mdr = self.ram[self.mar]
-
-        return self.mdr
-
-    def ram_write(self, address, value):
-        """
-        Should accept a value to write, and the address to write to
-        """
-        # Save address to MAR
-        self.mar = address
-
-        # Save value to MDR
-        self.mdr = value
-
-        # Save the value in MDR to the memory address stored in MAR
-        self.ram[self.mar] = self.mdr
-
-    def trace(self):
-        """
-        Handy function to print out the CPU state. You might want to call this
-        from run() if you need help debugging.
-        """
-
-        print(f"TRACE: PC: %02X | FL:  %02X | %02X %02X %02X |" % (
-            self.pc,
-            self.fl,
-            #self.ie,
-            self.ram_read(self.pc),
-            self.ram_read(self.pc + 1),
-            self.ram_read(self.pc + 2)
-        ), end='')
-
-        for i in range(8):
-            print(" %02X" % self.reg[i], end='')
-
-        print()
 
     def handle_call(self):
         # Get the address of the instruction directly after CALL
@@ -310,6 +225,71 @@ class CPU:
         # Point to PC to that address
         self.pc = address
 
+    def load(self):
+        """Load a program into memory."""
+        # Print an error if user did not provide a program to load
+        # and exit the program
+        if len(sys.argv) < 2:
+            print("Please provide a file to open\n")
+            print("Usage: filename file_to_open\n")
+            sys.exit()
+
+        try:
+            # Open the file provided as the 2nd arg
+            with open(sys.argv[1]) as file:
+                for line in file:
+                    # Split the line into an array, with '#' as the delimiter
+                    comment_split = line.split('#')
+
+                    # The first string is a possible instruction
+                    possible_instruction = comment_split[0]
+
+                    # If it's an empty string, this line is a comment
+                    if possible_instruction == '':
+                        continue
+
+                    # If the string starts with a 1 or 0, it's an instruction
+                    if possible_instruction[0] == '1' or possible_instruction[0] == '0':
+                        # Get the first 8 values (remove trailing whitespace and
+                        # chars)
+                        instruction = possible_instruction[:8]
+
+                        # Convert the instruction into an integer and store it
+                        # in memory
+                        self.ram[self.mar] = int(instruction, 2)
+
+                        # Increment the memory address register value
+                        self.mar += 1
+
+        except FileNotFoundError:
+                print(f'{sys.argv[0]}: {sys.argv[1]} not found')
+                sys.exit()
+
+    def ram_read(self, address):
+        """
+        Should accept the address to read and return the value stored there
+        """
+        # Save address to MAR
+        self.mar = address
+
+        # Save data to MDR
+        self.mdr = self.ram[self.mar]
+
+        return self.mdr
+
+    def ram_write(self, address, value):
+        """
+        Should accept a value to write, and the address to write to
+        """
+        # Save address to MAR
+        self.mar = address
+
+        # Save value to MDR
+        self.mdr = value
+
+        # Save the value in MDR to the memory address stored in MAR
+        self.ram[self.mar] = self.mdr
+
     def run(self):
         """Run the CPU."""
         while self.running:
@@ -340,4 +320,24 @@ class CPU:
             if not sets_pc:
                 # Point the PC to the next instruction in memory
                 self.pc += num_operands + 1
+
+    def trace(self):
+        """
+        Handy function to print out the CPU state. You might want to call this
+        from run() if you need help debugging.
+        """
+
+        print(f"TRACE: PC: %02X | FL:  %02X | %02X %02X %02X |" % (
+            self.pc,
+            self.fl,
+            #self.ie,
+            self.ram_read(self.pc),
+            self.ram_read(self.pc + 1),
+            self.ram_read(self.pc + 2)
+        ), end='')
+
+        for i in range(8):
+            print(" %02X" % self.reg[i], end='')
+
+        print()
 
