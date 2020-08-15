@@ -12,7 +12,8 @@ MUL = 0b10100010
 DIV = 0b10100011
 PUSH = 0b01000101
 POP = 0b01000110
-
+CALL = 0b01010000
+RET = 0b00010001
 
 class CPU:
     """Main CPU class."""
@@ -62,6 +63,8 @@ class CPU:
         self.branchtable[PRN] = self.handle_prn
         self.branchtable[PUSH] = self.handle_push
         self.branchtable[POP] = self.handle_pop
+        self.branchtable[CALL] = self.handle_call
+        self.branchtable[RET] = self.handle_ret
 
     def load(self):
         """Load a program into memory."""
@@ -201,6 +204,29 @@ class CPU:
 
         # Copy the value to the address pointed to by the SP
         self.ram_write(self.reg[7], value)
+
+    def handle_call(self):
+        # Get the address of the instruction directly after CALL
+        return_address = self.ram_read(self.pc + 2)
+
+        # Push it onto the stack
+        ## Decrement the Stack Pointer
+        self.reg[7] -= 1
+
+        ## Store the return address at the top(bottom) of the stack
+        self.ram_write(self.reg[7], return_address)
+
+        # Get the register to fetch from
+        register_num = self.ram_read(self.pc + 1)
+
+        # Grab the address stored in that register
+        address = self.reg[register_num]
+
+        # Set the PC to that address
+        self.pc = address
+
+    def handle_ret(self):
+        pass
 
     def run(self):
         """Run the CPU."""
