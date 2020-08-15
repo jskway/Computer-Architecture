@@ -3,17 +3,21 @@
 import sys
 
 """Instruction Opcodes"""
-HLT = 0b00000001
-LDI = 0b10000010
-PRN = 0b01000111
 ADD = 0b10100000
-SUB = 0b10100001
-MUL = 0b10100010
-DIV = 0b10100011
-PUSH = 0b01000101
-POP = 0b01000110
 CALL = 0b01010000
+CMP = 0b10100111
+DIV = 0b10100011
+HLT = 0b00000001
+JEQ = 0b01010101
+JMP = 0b01010100
+JNE = 0b01010110
+LDI = 0b10000010
+MUL = 0b10100010
+PRN = 0b01000111
+POP = 0b01000110
+PUSH = 0b01000101
 RET = 0b00010001
+SUB = 0b10100001
 
 class CPU:
     """Main CPU class."""
@@ -65,6 +69,10 @@ class CPU:
         self.branchtable[POP] = self.handle_pop
         self.branchtable[CALL] = self.handle_call
         self.branchtable[RET] = self.handle_ret
+        self.branchtable[CMP] = self.handle_cmp
+        self.branchtable[JMP] = self.handle_jmp
+        self.branchtable[JEQ] = self.handle_jeq
+        self.branchtable[JNE] = self.handle_jne
 
     def load(self):
         """Load a program into memory."""
@@ -165,46 +173,6 @@ class CPU:
 
         print()
 
-    def handle_hlt(self):
-        self.running = False
-        sys.exit()
-
-    def handle_ldi(self):
-        register = self.ram_read(self.pc + 1)
-        value = self.ram_read(self.pc + 2)
-
-        self.reg[register] = value
-
-    def handle_prn(self):
-        register = self.ram_read(self.pc + 1)
-        print(self.reg[register])
-
-    def handle_pop(self):
-        # Get the value from address pointed to by the Stack Pointer
-        value = self.ram_read(self.reg[7])
-
-        # Get the register number to copy into
-        register = self.ram_read(self.pc + 1)
-
-        # Copy the value into the register
-        self.reg[register] = value
-
-        # Increment the Stack Pointer
-        self.reg[7] += 1
-
-    def handle_push(self):
-        # Decrement the Stack Pointer
-        self.reg[7] -= 1
-
-        # Get the register to retrieve the value from
-        register = self.ram_read(self.pc + 1)
-
-        # Get the value from the register
-        value = self.reg[register]
-
-        # Copy the value to the address pointed to by the SP
-        self.ram_write(self.reg[7], value)
-
     def handle_call(self):
         # Get the address of the instruction directly after CALL
         return_address = self.pc + 2
@@ -225,6 +193,58 @@ class CPU:
         # Set the PC to that address
         self.pc = address
 
+    def handle_cmp(self):
+        pass
+
+    def handle_hlt(self):
+        self.running = False
+        sys.exit()
+
+    def handle_jeq(self):
+        pass
+
+    def handle_jmp(self):
+        pass
+
+    def handle_jne(self):
+        pass
+
+    def handle_ldi(self):
+        register = self.ram_read(self.pc + 1)
+        value = self.ram_read(self.pc + 2)
+
+        self.reg[register] = value
+
+    def handle_pop(self):
+        # Get the value from address pointed to by the Stack Pointer
+        value = self.ram_read(self.reg[7])
+
+        # Get the register number to copy into
+        register = self.ram_read(self.pc + 1)
+
+        # Copy the value into the register
+        self.reg[register] = value
+
+        # Increment the Stack Pointer
+        self.reg[7] += 1
+
+    def handle_prn(self):
+        register = self.ram_read(self.pc + 1)
+        print(self.reg[register])
+
+    def handle_push(self):
+        # Decrement the Stack Pointer
+        self.reg[7] -= 1
+
+        # Get the register to retrieve the value from
+        register = self.ram_read(self.pc + 1)
+
+        # Get the value from the register
+        value = self.reg[register]
+
+        # Copy the value to the address pointed to by the SP
+        self.ram_write(self.reg[7], value)
+
     def handle_ret(self):
         # Pop the address at the top of the stack
 
@@ -234,7 +254,7 @@ class CPU:
         ## Increment the Stack Pointer
         self.reg[7] += 1
 
-        ## Point to PC to that address
+        # Point to PC to that address
         self.pc = address
 
     def run(self):
