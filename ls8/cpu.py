@@ -52,6 +52,9 @@ class CPU:
         # Flags Register - holds the current flags status
         self.fl = None
 
+        # Loop in cpu_run() will run while this is True
+        self.running = True
+
         # Set up a branch table
         self.branchtable = {}
         self.branchtable[HLT] = self.handle_hlt
@@ -160,6 +163,7 @@ class CPU:
         print()
 
     def handle_hlt(self):
+        self.running = False
         sys.exit()
 
     def handle_ldi(self):
@@ -200,9 +204,7 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        running = True
-
-        while running:
+        while self.running:
             # Get the current instruction
             instruction = self.ram_read(self.pc)
 
@@ -224,6 +226,10 @@ class CPU:
             else:
                 self.branchtable[self.ir]()
 
-            # Point the PC to the next instruction in memory
-            self.pc += num_operands + 1
+            # Check if this instruction  sets the PC directly
+            sets_pc = (instruction >> 4) & 0b0001
+
+            if not sets_pc:
+                # Point the PC to the next instruction in memory
+                self.pc += num_operands + 1
 
