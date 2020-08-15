@@ -207,13 +207,13 @@ class CPU:
 
     def handle_call(self):
         # Get the address of the instruction directly after CALL
-        return_address = self.ram_read(self.pc + 2)
+        return_address = self.pc + 2
 
         # Push it onto the stack
         ## Decrement the Stack Pointer
         self.reg[7] -= 1
 
-        ## Store the return address at the top(bottom) of the stack
+        ## Store the return address at the top of the stack
         self.ram_write(self.reg[7], return_address)
 
         # Get the register to fetch from
@@ -226,7 +226,16 @@ class CPU:
         self.pc = address
 
     def handle_ret(self):
-        pass
+        # Pop the address at the top of the stack
+
+        ## Get the address pointed to by the Stack Pointer
+        address = self.ram_read(self.reg[7])
+
+        ## Increment the Stack Pointer
+        self.reg[7] += 1
+
+        ## Point to PC to that address
+        self.pc = address
 
     def run(self):
         """Run the CPU."""
