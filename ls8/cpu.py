@@ -75,7 +75,6 @@ class CPU:
         self.branchtable[POP] = self.handle_pop
         self.branchtable[CALL] = self.handle_call
         self.branchtable[RET] = self.handle_ret
-        self.branchtable[CMP] = self.handle_cmp
         self.branchtable[JMP] = self.handle_jmp
         self.branchtable[JEQ] = self.handle_jeq
         self.branchtable[JNE] = self.handle_jne
@@ -181,9 +180,9 @@ class CPU:
         from run() if you need help debugging.
         """
 
-        print(f"TRACE: %02X | %02X %02X %02X |" % (
+        print(f"TRACE: PC: %02X | FL:  %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
+            self.fl,
             #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
@@ -220,13 +219,48 @@ class CPU:
         sys.exit()
 
     def handle_jeq(self):
-        pass
+        # Isolate the equal flag
+        equal = self.fl & 0b00000001
+
+        if equal:
+            # Get the register to retrieve from
+            register = self.ram_read(self.pc + 1)
+
+            # Get the address stored in that register
+            address = self.reg[register]
+
+            # Jump to that address
+            self.pc = address
+        else:
+            # Otherwise go to the next instruction
+            self.pc += 2
 
     def handle_jmp(self):
-        pass
+        # Get the register to retrieve from
+        register = self.ram_read(self.pc + 1)
+
+        # Get the address to jump to, from the register
+        address = self.reg[register]
+
+        # Set the PC to the address
+        self.pc = address
 
     def handle_jne(self):
-        pass
+        # Isolate the equal flag
+        equal = self.fl & 0b00000001
+
+        if not equal:
+            # Get the register to retrieve from
+            register = self.ram_read(self.pc + 1)
+
+            # Get the address stored in that register
+            address = self.reg[register]
+
+            # Jump to that address
+            self.pc = address
+        else:
+            # Otherwise go to the next instruction
+            self.pc += 2
 
     def handle_ldi(self):
         register = self.ram_read(self.pc + 1)
